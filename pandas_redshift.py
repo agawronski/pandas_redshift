@@ -3,7 +3,6 @@ from io import StringIO
 import pandas as pd
 import traceback
 import psycopg2
-import argparse
 import boto3
 import sys
 import os
