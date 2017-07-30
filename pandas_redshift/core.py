@@ -22,10 +22,10 @@ def connect_to_redshift(dbname, host, user, password, port = 5439):
 
 
 def close_up_shop():
+    global connect, cursor, s3, s3_bucket_var, s3_subdirectory_var, aws_ak, aws_sk
     cursor.close()
     connect.commit()
     connect.close()
-    global connect, cursor, s3, s3_bucket_var, s3_subdirectory_var, aws_ak, aws_sk
     try:
         del connect
         del cursor

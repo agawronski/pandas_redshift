@@ -8,7 +8,7 @@ setup(
     author = 'Aidan Gawronski',
     author_email = 'aidangawronski@gmail.com',
     url = 'https://github.com/agawronski/pandas_redshift',
-    download_url = 'https://github.com/agawronski/pandas_redshift/archive/1.0.tar.gz', # I'll explain this in a second
+    python_requires = '>=3',
     install_requires = ['traceback',
                         'psycopg2',
                         'pandas',
