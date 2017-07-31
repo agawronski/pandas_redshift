@@ -9,12 +9,12 @@ The pandas_redshift package only supports python3.
 pip install pandas-redshift
 ```
 
-## Code Example
+## Example
 ```python
 import pandas_redshift as pr
 ```
 
-Connect to redshift. If port is not supplied set to amazon default 5439
+Connect to redshift. If port is not supplied it will be set to amazon default 5439
 
 ```python
 pr.connect_to_redshift(dbname = <dbname>,
@@ -40,7 +40,9 @@ GAME_ID1                   MATCHUP LOCATION  W  FINAL_MARGIN
 5  21400899  MAR 4, 2015 - CHA @ BKN        A  W            24
 ```
 
-Write a pandas DataFrame to redshift. Requires access to an S3 bucket and previously having connected to redshift (with pr.connect_to_redshift). If the table exists IT WILL BE DROPPED and then the pandas DataFrame will be put in it's place.
+Write a pandas DataFrame to redshift. Requires access to an S3 bucket and previously running pr.connect_to_redshift.
+
+If the table currently exists *IT WILL BE DROPPED* and then the pandas DataFrame will be put in it's place.
 
 ```python
 # Connect to S3
