@@ -21,27 +21,6 @@ def connect_to_redshift(dbname, host, user, password, port = 5439):
     cursor = connect.cursor()
 
 
-def close_up_shop():
-    global connect, cursor, s3, s3_bucket_var, s3_subdirectory_var, aws_ak, aws_sk
-    cursor.close()
-    connect.commit()
-    connect.close()
-    try:
-        del connect
-        del cursor
-    except:
-        pass
-    try:
-        del s3
-        del s3_bucket_var
-        del s3_subdirectory_var
-        del aws_ak
-        del aws_sk
-    except:
-        pass
-
-
-
 def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory = None):
     global s3, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2
     s3 = boto3.resource('s3',
@@ -128,6 +107,25 @@ def pandas_to_redshift(data_frame,
         traceback.print_exc(file=sys.stdout)
         connect.rollback()
 
+
+def close_up_shop():
+    global connect, cursor, s3, s3_bucket_var, s3_subdirectory_var, aws_ak, aws_sk
+    cursor.close()
+    connect.commit()
+    connect.close()
+    try:
+        del connect
+        del cursor
+    except:
+        pass
+    try:
+        del s3
+        del s3_bucket_var
+        del s3_subdirectory_var
+        del aws_ak
+        del aws_sk
+    except:
+        pass
 
 
 #-------------------------------------------------------------------------------
