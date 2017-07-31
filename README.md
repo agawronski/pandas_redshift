@@ -1,4 +1,4 @@
-## Synopsis
+## pandas_redshift
 
 This package is designed to make it easier to get data from redshift into a pandas DataFrame and vice versa.
 The pandas_redshift package only supports python3.
@@ -32,12 +32,12 @@ data = pr.redshift_to_pandas('select * from gawronski.nba_shots_log')
 data.ix[0:5,0:5]
 
 GAME_ID1                   MATCHUP LOCATION  W  FINAL_MARGIN
-0  21400899  MAR 04, 2015 - CHA @ BKN        A  W            24
-1  21400899  MAR 04, 2015 - CHA @ BKN        A  W            24
-2  21400899  MAR 04, 2015 - CHA @ BKN        A  W            24
-3  21400899  MAR 04, 2015 - CHA @ BKN        A  W            24
-4  21400899  MAR 04, 2015 - CHA @ BKN        A  W            24
-5  21400899  MAR 04, 2015 - CHA @ BKN        A  W            24
+0  21400899  MAR 4, 2015 - CHA @ BKN        A  W            24
+1  21400899  MAR 4, 2015 - CHA @ BKN        A  W            24
+2  21400899  MAR 4, 2015 - CHA @ BKN        A  W            24
+3  21400899  MAR 4, 2015 - CHA @ BKN        A  W            24
+4  21400899  MAR 4, 2015 - CHA @ BKN        A  W            24
+5  21400899  MAR 4, 2015 - CHA @ BKN        A  W            24
 ```
 
 Write a pandas DataFrame to redshift. Requires access to an S3 bucket and previously having connected to redshift (with pr.connect_to_redshift). If the table exists IT WILL BE DROPPED and then the pandas DataFrame will be put in it's place.
