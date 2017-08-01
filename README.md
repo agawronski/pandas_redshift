@@ -42,7 +42,7 @@ GAME_ID1                   MATCHUP LOCATION  W  FINAL_MARGIN
 
 Write a pandas DataFrame to redshift. Requires access to an S3 bucket and previously running pr.connect_to_redshift.
 
-If the table currently exists *IT WILL BE DROPPED* and then the pandas DataFrame will be put in it's place.
+If the table currently exists **IT WILL BE DROPPED** and then the pandas DataFrame will be put in it's place.
 
 ```python
 # Connect to S3
