@@ -51,7 +51,7 @@ pr.connect_to_s3(aws_access_key_id = <aws_access_key_id>,
                 bucket = <bucket>,
                 subdirectory = <subdirectory>)
 
-# Write the DataFrame to S3
+# Write the DataFrame to S3 and then to redshift
 pr.pandas_to_redshift(data_frame = data,
                         redshift_table_name = 'gawronski.nba_shots_log')
 
