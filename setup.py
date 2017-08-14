@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name = 'pandas_redshift',
     packages = ['pandas_redshift'],
-    version = '1.0.7',
+    version = '1.0.8',
     description = 'Load data from redshift into a pandas DataFrame and vice versa.',
     author = 'Aidan Gawronski',
     author_email = 'aidangawronski@gmail.com',

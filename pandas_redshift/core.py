@@ -53,7 +53,7 @@ def pandas_to_redshift(data_frame,
                         dateformat = 'auto',
                         timeformat = 'auto'):
     rrwords = open(os.path.join(os.path.dirname(__file__), \
-    '../docs/redshift_reserve_words.txt'), 'r').readlines()
+    'redshift_reserve_words.txt'), 'r').readlines()
     rrwords = [r.strip().lower() for r in rrwords]
     data_frame.columns = [x.lower() for x in data_frame.columns]
     not_valid = [r for r in data_frame.columns if r in rrwords]
