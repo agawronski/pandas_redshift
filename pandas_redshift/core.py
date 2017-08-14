@@ -52,10 +52,12 @@ def pandas_to_redshift(data_frame,
                         quotechar = '"',
                         dateformat = 'auto',
                         timeformat = 'auto'):
-    rrwords = pd.read_csv('docs/redshift_reserve_words.txt')
+    rrwords = open('docs/redshift_reserve_words.txt', 'r').readlines()
+    rrwords = [r.strip().lower() for r in rrwords]
+    data_frame.columns = [x.lower() for x in data_frame.columns]
     not_valid = [r for r in data_frame.columns if r in rrwords]
     if not_valid:
-        print('DataFrame column name {0} is a reserve word in redshift'.format(not_valid[0]))
+        raise ValueError('DataFrame column name {0} is a reserve word in redshift'.format(not_valid[0]))
     else:
         csv_name = redshift_table_name + '.csv'
         if save_local == True:
