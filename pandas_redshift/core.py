@@ -117,6 +117,11 @@ def pandas_to_redshift(data_frame,
             connect.rollback()
 
 
+def exec_commit(sql_query):
+    cursor.execute(sql_query)
+    connect.commit()
+
+
 def close_up_shop():
     global connect, cursor, s3, s3_bucket_var, s3_subdirectory_var, aws_ak, aws_sk
     cursor.close()

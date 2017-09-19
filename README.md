@@ -44,6 +44,8 @@ Write a pandas DataFrame to redshift. Requires access to an S3 bucket and previo
 
 If the table currently exists **IT WILL BE DROPPED** and then the pandas DataFrame will be put in it's place.
 
+If you set append = True the table will be appended to (if it exists).
+
 ```python
 # Connect to S3
 pr.connect_to_s3(aws_access_key_id = <aws_access_key_id>,
@@ -69,7 +71,9 @@ pr.pandas_to_redshift(data_frame,
                         delimiter = ',',
                         quotechar = '"',
                         dateformat = 'auto',
-                        timeformat = 'auto')
+                        timeformat = 'auto',
+                        append = False)
+
 ```
 Redshift data types: http://docs.aws.amazon.com/redshift/latest/dg/c_Supported_data_types.html
 
@@ -77,4 +81,18 @@ Finally close the cursor, commit and close the database connection, and remove v
 
 ```python
 pr.close_up_shop()
+```
+
+
+As this package is largely a layer over psycopg2 a convenience function has been added to execute and commit sql queries that don't have anything to do with your local machine (for example creating a new table).
+
+```python
+pr.exec_commit("""
+create table combined_table as
+select *
+from table1
+union
+select *
+from table2;
+""")
 ```
