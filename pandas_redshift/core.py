@@ -44,14 +44,15 @@ def redshift_to_pandas(sql_query):
 
 
 def pandas_to_redshift(data_frame,
-                        redshift_table_name,
-                        column_data_types = None,
-                        index = False,
-                        save_local = False,
-                        delimiter = ',',
-                        quotechar = '"',
-                        dateformat = 'auto',
-                        timeformat = 'auto'):
+                       redshift_table_name,
+                       column_data_types = None,
+                       index = False,
+                       save_local = False,
+                       delimiter = ',',
+                       quotechar = '"',
+                       dateformat = 'auto',
+                       timeformat = 'auto',
+                       append = False):
     rrwords = open(os.path.join(os.path.dirname(__file__), \
     'redshift_reserve_words.txt'), 'r').readlines()
     rrwords = [r.strip().lower() for r in rrwords]
@@ -84,12 +85,13 @@ def pandas_to_redshift(data_frame,
         if column_data_types is None:
             column_data_types = ['varchar(256)'] * len(columns)
         columns_and_data_type = ', '.join(['{0} {1}'.format(x, y) for x,y in zip(columns, column_data_types)])
-        create_table_query = 'create table {0} ({1})'.format(redshift_table_name, columns_and_data_type)
-        print(create_table_query)
-        print('CREATING A TABLE IN REDSHIFT')
-        cursor.execute('drop table if exists {0}'.format(redshift_table_name))
-        cursor.execute(create_table_query)
-        connect.commit()
+        if append is False:
+            create_table_query = 'create table {0} ({1})'.format(redshift_table_name, columns_and_data_type)
+            print(create_table_query)
+            print('CREATING A TABLE IN REDSHIFT')
+            cursor.execute('drop table if exists {0}'.format(redshift_table_name))
+            cursor.execute(create_table_query)
+            connect.commit()
         # CREATE THE COPY STATEMENT TO SEND FROM S3 TO THE TABLE IN REDSHIFT
         bucket_name = 's3://{0}/{1}'.format(s3_bucket_var, s3_subdirectory_var + csv_name)
         s3_to_sql = """
