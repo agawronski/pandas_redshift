@@ -96,3 +96,13 @@ select *
 from table2;
 """)
 ```
+
+If you encounter the error:
+psycopg2.InternalError: current transaction is aborted, commands ignored until end of transaction block
+
+you can access the pyscopg2 internals with the following:
+
+```python
+pr.core.connect.commit()
+pr.core.connect.rollback()
+```
