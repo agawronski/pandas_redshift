@@ -35,11 +35,19 @@ def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory
     aws_2 = aws_secret_access_key
 
 
-def redshift_to_pandas(sql_query):
+    
+def redshift_to_pandas(sql_query, coerce_dtypes=False):
     # pass a sql query and return a pandas dataframe
     cursor.execute(sql_query)
     columns_list = [desc[0] for desc in cursor.description]
     data = pd.DataFrame(cursor.fetchall(), columns = columns_list)
+    # try to coerce dtypes
+    if coerce_dtypes:
+        for col in data_new.columns: 
+            (data[col].apply(pd.to_numeric, errors='coerce')
+                      .apply(pd.to_datetime, errors='coerce')
+                      .apply(pd.to_timedelta, errors='coerce')
+            )
     return data
 
 
