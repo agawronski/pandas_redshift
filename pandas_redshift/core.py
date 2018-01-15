@@ -63,7 +63,8 @@ def redshift_to_pandas(sql_query):
             to_numpy_dtypes = {
                     "integer":"int64",
                     "floating":"float64",
-                    "datetime64":"datetime64[ns]"
+                    "datetime64":"datetime64[ns]", 
+                    "string":"object"
              }
 
             return to_numpy_dtypes.get(output, output)
