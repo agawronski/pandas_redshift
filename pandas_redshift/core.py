@@ -6,7 +6,8 @@ import psycopg2
 import boto3
 import sys
 import os
-
+import pandas._libs.lib as lib
+from pandas.core.dtypes.missing import isna
 
 def connect_to_redshift(dbname, host, user, password, port = 5439):
     # connect to redshift
@@ -36,18 +37,41 @@ def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory
 
 
     
-def redshift_to_pandas(sql_query, coerce_dtypes=False):
+def redshift_to_pandas(sql_query):
     # pass a sql query and return a pandas dataframe
     cursor.execute(sql_query)
     columns_list = [desc[0] for desc in cursor.description]
     data = pd.DataFrame(cursor.fetchall(), columns = columns_list)
     # try to coerce dtypes
-    if coerce_dtypes:
-        for col in data_new.columns: 
-            (data[col].apply(pd.to_numeric, errors='coerce')
-                      .apply(pd.to_datetime, errors='coerce')
-                      .apply(pd.to_timedelta, errors='coerce')
-            )
+    
+    def _get_notna_col_dtype(col):
+            """
+            this function is adapted from: pandas.io.sql.SQLTable._get_notna_col_dtype
+            
+            Infer datatype of the Series col.  In case the dtype of col is 'object'
+            and it contains NA values, this infers the datatype of the not-NA
+            values.  Needed for inserting typed data containing NULLs, GH8778.
+            """
+            col_for_inference = col
+            if col.dtype == 'object':
+                notnadata = col[~isna(col)]
+                if len(notnadata):
+                    col_for_inference = notnadata
+
+            output = lib.infer_dtype(col_for_inference)
+            # translate to numpy dtypes
+            to_numpy_dtypes = {
+                    "integer":"int64",
+                    "floating":"float64",
+                    "datetime64":"datetime64[ns]"
+             }
+
+            return to_numpy_dtypes.get(output, output)
+    dtypes = {x:_get_notna_col_dtype(data[x]) for x in data.columns }
+    data.astype(dtype=dtypes)
+    
+    
+    
     return data
 
 
