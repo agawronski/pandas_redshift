@@ -8,7 +8,7 @@ import sys
 import os
 
 
-def connect_to_redshift(dbname, host, user, password, port = 5439):
+def connect_to_redshift(dbname, host, user, port = 5439, **kwargs):
     # connect to redshift
     global connect
     global cursor
@@ -16,7 +16,7 @@ def connect_to_redshift(dbname, host, user, password, port = 5439):
                                         host = host,
                                         port = port,
                                         user = user,
-                                        password = password)
+                                        **kwargs)
 
     cursor = connect.cursor()
 
