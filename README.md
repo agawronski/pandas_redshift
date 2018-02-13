@@ -14,7 +14,9 @@ pip install pandas-redshift
 import pandas_redshift as pr
 ```
 
-Connect to redshift. If port is not supplied it will be set to amazon default 5439
+Connect to redshift. If port is not supplied it will be set to amazon default 5439.
+
+As of release 1.1.1 you can exclude the password if you are using a .pgpass file.
 
 ```python
 pr.connect_to_redshift(dbname = <dbname>,
@@ -51,7 +53,10 @@ If you set append = True the table will be appended to (if it exists).
 pr.connect_to_s3(aws_access_key_id = <aws_access_key_id>,
                 aws_secret_access_key = <aws_secret_access_key>,
                 bucket = <bucket>,
-                subdirectory = <subdirectory>)
+                subdirectory = <subdirectory>
+                # As of release 1.1.1 you are able to specify an aws_session_token (if necessary):
+                # aws_session_token = <aws_session_token>
+                )
 
 # Write the DataFrame to S3 and then to redshift
 pr.pandas_to_redshift(data_frame = data,
@@ -60,6 +65,8 @@ pr.pandas_to_redshift(data_frame = data,
 ```
 
 Other options:
+
+As of v1.1.1 you can specify the region (necessary if the S3 bucket is in a different location than Redshift).
 
 ```python
 pr.pandas_to_redshift(data_frame,
@@ -72,6 +79,7 @@ pr.pandas_to_redshift(data_frame,
                         quotechar = '"',
                         dateformat = 'auto',
                         timeformat = 'auto',
+                        region = '',
                         append = False)
 
 ```
