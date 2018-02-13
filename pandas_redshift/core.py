@@ -10,8 +10,7 @@ import os
 
 def connect_to_redshift(dbname, host, user, port = 5439, **kwargs):
     # connect to redshift
-    global connect
-    global cursor
+    global connect, cursor
     connect = psycopg2.connect(dbname = dbname,
                                         host = host,
                                         port = port,
@@ -131,21 +130,16 @@ def exec_commit(sql_query):
 
 
 def close_up_shop():
-    global connect, cursor, s3, s3_bucket_var, s3_subdirectory_var, aws_ak, aws_sk
+    global connect, cursor, s3, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2, aws_token
     cursor.close()
     connect.commit()
     connect.close()
     try:
-        del connect
-        del cursor
+        del connect, cursor
     except:
         pass
     try:
-        del s3
-        del s3_bucket_var
-        del s3_subdirectory_var
-        del aws_ak
-        del aws_sk
+        del s3, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2, aws_token
     except:
         pass
 
