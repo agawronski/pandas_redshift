@@ -21,11 +21,12 @@ def connect_to_redshift(dbname, host, user, port = 5439, **kwargs):
     cursor = connect.cursor()
 
 
-def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory = None):
-    global s3, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2
+def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory = None, **kwargs):
+    global s3, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2, aws_token
     s3 = boto3.resource('s3',
                         aws_access_key_id = aws_access_key_id,
-                        aws_secret_access_key = aws_secret_access_key)
+                        aws_secret_access_key = aws_secret_access_key,
+                        **kwargs)
     s3_bucket_var = bucket
     if subdirectory is None:
         s3_subdirectory_var = ''
@@ -33,6 +34,8 @@ def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory
         s3_subdirectory_var = subdirectory + '/'
     aws_1 = aws_access_key_id
     aws_2 = aws_secret_access_key
+    if kwargs.get('aws_session_token'):
+        aws_token = kwargs.get('aws_session_token')
 
 
 def redshift_to_pandas(sql_query):
@@ -66,14 +69,11 @@ def pandas_to_redshift(data_frame,
         if save_local == True:
             data_frame.to_csv(csv_name, index = index, sep = delimiter)
             print('saved file {0} in {1}'.format(csv_name, os.getcwd()))
-            data_send = open(csv_name, 'rb')
-            s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = data_send)
-            print('saved file {0} in bucket {1}'.format(csv_name, s3_subdirectory_var + csv_name))
-        else:
-            csv_buffer = StringIO()
-            data_frame.to_csv(csv_buffer, index = index, sep = delimiter)
-            s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = csv_buffer.getvalue())
-            print('saved file {0} in bucket {1}'.format(csv_name, s3_subdirectory_var + csv_name))
+        # SEND DATA TO S3    
+        csv_buffer = StringIO()
+        data_frame.to_csv(csv_buffer, index = index, sep = delimiter)
+        s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = csv_buffer.getvalue())
+        print('saved file {0} in bucket {1}'.format(csv_name, s3_subdirectory_var + csv_name))
         # CREATE AN EMPTY TABLE IN REDSHIFT
         if index == True:
             columns = list(data_frame.columns)
@@ -95,18 +95,33 @@ def pandas_to_redshift(data_frame,
             connect.commit()
         # CREATE THE COPY STATEMENT TO SEND FROM S3 TO THE TABLE IN REDSHIFT
         bucket_name = 's3://{0}/{1}'.format(s3_bucket_var, s3_subdirectory_var + csv_name)
-        s3_to_sql = """
-        copy {0}
-        from '{1}'
-        delimiter '{2}'
-        ignoreheader 1
-        csv quote as '{3}'
-        dateformat '{4}'
-        timeformat '{5}'
-        access_key_id '{6}'
-        secret_access_key '{7}'
-        region '{8}';
-        """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2, region)
+        if aws_token:
+            s3_to_sql = """
+            copy {0}
+            from '{1}'
+            delimiter '{2}'
+            ignoreheader 1
+            csv quote as '{3}'
+            dateformat '{4}'
+            timeformat '{5}'
+            access_key_id '{6}'
+            secret_access_key '{7}'
+            session_token '{8}'
+            region '{9}';
+            """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2, aws_token, region)
+        else:
+            s3_to_sql = """
+            copy {0}
+            from '{1}'
+            delimiter '{2}'
+            ignoreheader 1
+            csv quote as '{3}'
+            dateformat '{4}'
+            timeformat '{5}'
+            access_key_id '{6}'
+            secret_access_key '{7}'
+            region '{8}';
+            """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2, region)
         print(s3_to_sql)
         # send the file
         print('FILLING THE TABLE IN REDSHIFT')
