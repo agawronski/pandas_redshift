@@ -55,6 +55,7 @@ def pandas_to_redshift(data_frame,
                        quotechar = '"',
                        dateformat = 'auto',
                        timeformat = 'auto',
+                       region = '',
                        append = False):
     rrwords = open(os.path.join(os.path.dirname(__file__), \
     'redshift_reserve_words.txt'), 'r').readlines()
@@ -105,8 +106,9 @@ def pandas_to_redshift(data_frame,
             timeformat '{5}'
             access_key_id '{6}'
             secret_access_key '{7}'
-            session_token '{8}';
-            """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2, aws_token)
+            session_token '{8}'
+            region '{9}';
+            """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2, aws_token, region)
         else:
             s3_to_sql = """
             copy {0}
@@ -117,8 +119,9 @@ def pandas_to_redshift(data_frame,
             dateformat '{4}'
             timeformat '{5}'
             access_key_id '{6}'
-            secret_access_key '{7}';
-            """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2)
+            secret_access_key '{7}'
+            region '{8}';
+            """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2, region)
         print(s3_to_sql)
         # send the file
         print('FILLING THE TABLE IN REDSHIFT')
