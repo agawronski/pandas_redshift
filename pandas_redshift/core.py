@@ -121,6 +121,8 @@ def pandas_to_redshift(data_frame,
             print(e)
             traceback.print_exc(file=sys.stdout)
             connect.rollback()
+            raise
+
 
 
 def exec_commit(sql_query):
