@@ -69,7 +69,7 @@ def pandas_to_redshift(data_frame,
         if save_local == True:
             data_frame.to_csv(csv_name, index = index, sep = delimiter)
             print('saved file {0} in {1}'.format(csv_name, os.getcwd()))
-        # SEND DATA TO S3    
+        # SEND DATA TO S3
         csv_buffer = StringIO()
         data_frame.to_csv(csv_buffer, index = index, sep = delimiter)
         s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = csv_buffer.getvalue())
@@ -95,33 +95,22 @@ def pandas_to_redshift(data_frame,
             connect.commit()
         # CREATE THE COPY STATEMENT TO SEND FROM S3 TO THE TABLE IN REDSHIFT
         bucket_name = 's3://{0}/{1}'.format(s3_bucket_var, s3_subdirectory_var + csv_name)
+        s3_to_sql = """
+        copy {0}
+        from '{1}'
+        delimiter '{2}'
+        ignoreheader 1
+        csv quote as '{3}'
+        dateformat '{4}'
+        timeformat '{5}'
+        access_key_id '{6}'
+        secret_access_key '{7}'
+        """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2)
+        if region:
+            s3_to_sql = s3_to_sql +  "region '{0}'".format(region)
         if aws_token:
-            s3_to_sql = """
-            copy {0}
-            from '{1}'
-            delimiter '{2}'
-            ignoreheader 1
-            csv quote as '{3}'
-            dateformat '{4}'
-            timeformat '{5}'
-            access_key_id '{6}'
-            secret_access_key '{7}'
-            session_token '{8}'
-            region '{9}';
-            """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2, aws_token, region)
-        else:
-            s3_to_sql = """
-            copy {0}
-            from '{1}'
-            delimiter '{2}'
-            ignoreheader 1
-            csv quote as '{3}'
-            dateformat '{4}'
-            timeformat '{5}'
-            access_key_id '{6}'
-            secret_access_key '{7}'
-            region '{8}';
-            """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2, region)
+            s3_to_sql = s3_to_sql +  "\n\tsession_token '{0}'".format(aws_token)
+        s3_to_sql = s3_to_sql + ';'
         print(s3_to_sql)
         # send the file
         print('FILLING THE TABLE IN REDSHIFT')
@@ -157,6 +146,5 @@ def close_up_shop():
         del aws_sk
     except:
         pass
-
 
 #-------------------------------------------------------------------------------
