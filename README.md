@@ -16,7 +16,7 @@ import pandas_redshift as pr
 
 Connect to redshift. If port is not supplied it will be set to amazon default 5439.
 
-As of release 1.1.1 you can exclude the password if you are using a .pgpass file.
+As of release 1.1.2 you can exclude the password if you are using a .pgpass file.
 
 ```python
 pr.connect_to_redshift(dbname = <dbname>,
@@ -66,7 +66,7 @@ pr.pandas_to_redshift(data_frame = data,
 
 Other options:
 
-As of v1.1.1 you can specify the region (necessary if the S3 bucket is in a different location than Redshift).
+As of v1.1.2 you can specify the region (necessary if the S3 bucket is in a different location than Redshift).
 
 ```python
 pr.pandas_to_redshift(data_frame,

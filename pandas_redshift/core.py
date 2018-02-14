@@ -35,6 +35,8 @@ def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory
     aws_2 = aws_secret_access_key
     if kwargs.get('aws_session_token'):
         aws_token = kwargs.get('aws_session_token')
+    else:
+        aws_token = ''
 
 
 def redshift_to_pandas(sql_query):
@@ -107,7 +109,7 @@ def pandas_to_redshift(data_frame,
         """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2)
         if region:
             s3_to_sql = s3_to_sql +  "region '{0}'".format(region)
-        if aws_token:
+        if aws_token != '':
             s3_to_sql = s3_to_sql +  "\n\tsession_token '{0}'".format(aws_token)
         s3_to_sql = s3_to_sql + ';'
         print(s3_to_sql)
