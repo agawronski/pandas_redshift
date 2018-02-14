@@ -1,3 +1,8 @@
+## v 1.1.2
+
+This release contains the following:
+agawronski - A fix for the issue raised by drakemccabe. aws_session_token is optional and not required.
+
 ## v 1.1.1
 
 This release contains the following:
