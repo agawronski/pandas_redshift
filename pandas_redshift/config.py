@@ -70,7 +70,7 @@ def _pg_connect():
     >>> connect, cursor = _pg_connect()
     """
     config = _read_config()
-    connect = psyco_connect(config.dbname, config.host,
+    connect = _psyco_connect(config.dbname, config.host,
                             config.user, config.port,
                             password=config.password)
     cursor = connect.cursor()
