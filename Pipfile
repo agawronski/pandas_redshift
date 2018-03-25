@@ -8,6 +8,8 @@ name = "pypi"
 [packages]
 
 pandas = "*"
+pyyaml = "*"
+"boto3" = "*"
 "psycopg2" = "*"
 
 

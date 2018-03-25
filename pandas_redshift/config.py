@@ -1,8 +1,7 @@
 from collections import namedtuple
+import psycopg2
 import yaml
 import os
-
-from .exceptions import ConfigReadYamlError
 
 
 # Easily store creds from `config.yaml`
@@ -36,7 +35,8 @@ def _read_config():
         with open(file_path, mode='r', encoding='UTF-8') as file:
             config = yaml.load(file)
             return DB(**config)
-    except ConfigReadYamlError:
+
+    except IOError as e:
         print("""
         Unable to find `config.yaml` in current directory.
 
@@ -49,3 +49,44 @@ def _read_config():
         password: 'password'
         """)
         raise
+
+
+def _pg_connect():
+    """Automatically Connect to Postgres
+
+    Uses DB creds from `_read_config()` namedtuple
+    to construct the DSN. From there, two variables are
+    returned: connect and cursor. Connect is a connection
+    class from Psycopg2 that handles connecting to a Postgres
+    instance. Cursor is an object that uses the connection
+    in order to send queries to Postgres.
+
+    :returns: connect, connection object
+              cursor,  cursor object
+
+    Example
+    -------
+
+    >>> connect, cursor = _pg_connect()
+    """
+    config = _read_config()
+    connect = psyco_connect(config.dbname, config.host,
+                            config.user, config.port,
+                            password=config.password)
+    cursor = connect.cursor()
+    return connect, cursor
+
+
+def _psyco_connect(dbname, host, user, port, **kwargs):
+    """Connect To Postgres Database Instance
+
+    :dbname: database name, str
+    :host: database host address, str
+    :port: connection port number, int
+    :user: username used to authenticate, str
+    :password: password used to authenticate, str
+
+    :returns: postgres connection, object
+    """
+    return psycopg2.connect(dbname=dbname, host=host, port=port,
+                            user=user, **kwargs)

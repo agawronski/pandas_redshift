@@ -8,16 +8,9 @@ import sys
 import os
 
 
-def connect_to_redshift(dbname, host, user, port = 5439, **kwargs):
-    # connect to redshift
-    global connect, cursor
-    connect = psycopg2.connect(dbname = dbname,
-                                        host = host,
-                                        port = port,
-                                        user = user,
-                                        **kwargs)
+from .config import _pg_connect
 
-    cursor = connect.cursor()
+connect, cursor = _pg_connect()
 
 
 def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory = None, **kwargs):
