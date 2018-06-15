@@ -57,9 +57,9 @@ def pandas_to_redshift(data_frame,
                        dateformat = 'auto',
                        timeformat = 'auto',
                        region = '',
+                       ServerSideEncryption = None,
                        append = False):
-    rrwords = open(os.path.join(os.path.dirname(__file__), \
-    'redshift_reserve_words.txt'), 'r').readlines()
+    rrwords = open('redshift_reserve_words.txt', 'r').readlines()
     rrwords = [r.strip().lower() for r in rrwords]
     data_frame.columns = [x.lower() for x in data_frame.columns]
     not_valid = [r for r in data_frame.columns if r in rrwords]
@@ -73,7 +73,7 @@ def pandas_to_redshift(data_frame,
         # SEND DATA TO S3
         csv_buffer = StringIO()
         data_frame.to_csv(csv_buffer, index = index, sep = delimiter)
-        s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = csv_buffer.getvalue())
+        s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = csv_buffer.getvalue(), ServerSideEncryption = ServerSideEncryption  )
         print('saved file {0} in bucket {1}'.format(csv_name, s3_subdirectory_var + csv_name))
         # CREATE AN EMPTY TABLE IN REDSHIFT
         if index == True:
