@@ -11,6 +11,7 @@ setup(
     python_requires = '>=3',
     install_requires = ['psycopg2-binary',
                         'pandas',
-                        'boto3'],
+                        'boto3',
+                        'pyyaml'],
     include_package_data = True
 )

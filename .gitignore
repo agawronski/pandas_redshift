@@ -2,3 +2,5 @@ __pycache__/
 dist/*
 *.egg-info
 build/
+.ropeproject
+config.yaml
