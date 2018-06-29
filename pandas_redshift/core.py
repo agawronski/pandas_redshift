@@ -60,6 +60,7 @@ def pandas_to_redshift(data_frame,
                        append = False,
                        diststyle = 'even',
                        distkey = '',
+                       sort_interleaved = False,
                        sortkey = ''):
     rrwords = open(os.path.join(os.path.dirname(__file__), \
     'redshift_reserve_words.txt'), 'r').readlines()
@@ -102,6 +103,8 @@ def pandas_to_redshift(data_frame,
                 # otherwise, override diststyle with distkey
                 create_table_query += ' distkey({0})'.format(distkey)
             if len(sortkey) > 0:
+                if sort_interleaved:
+                    create_table_query += ' interleaved'
                 create_table_query += ' sortkey({0})'.format(sortkey)
             print(create_table_query)
             print('CREATING A TABLE IN REDSHIFT')
