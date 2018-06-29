@@ -57,11 +57,14 @@ def pandas_to_redshift(data_frame,
                        dateformat = 'auto',
                        timeformat = 'auto',
                        region = '',
-                       ServerSideEncryption = None,
-                       append = False):
+                       append = False,
+                      **kwargs):
     rrwords = open(os.path.join(os.path.dirname(__file__), \
     'redshift_reserve_words.txt'), 'r').readlines()
     rrwords = [r.strip().lower() for r in rrwords]
+    accepted_kwargs = ['ACL', 'Body', 'CacheControl ',  'ContentDisposition', 'ContentEncoding', 'ContentLanguage', 'ContentLength', 'ContentMD5', 'ContentType', 'Expires', 'GrantFullControl', 'GrantRead', 'GrantReadACP', 'GrantWriteACP', 'Metadata', 'ServerSideEncryption', 'StorageClass', 'WebsiteRedirectLocation', 'SSECustomerAlgorithm', 'SSECustomerKey', 'SSECustomerKeyMD5', 'SSEKMSKeyId', 'RequestPayer', 'Tagging' ] # Available parameters for 
+    service: https://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.Client.put_object
+    extra_kwargs = {k: v for k, v in kwargs.items() if k in accepted_kwargs and v is not None}
     data_frame.columns = [x.lower() for x in data_frame.columns]
     not_valid = [r for r in data_frame.columns if r in rrwords]
     if not_valid:
@@ -74,7 +77,7 @@ def pandas_to_redshift(data_frame,
         # SEND DATA TO S3
         csv_buffer = StringIO()
         data_frame.to_csv(csv_buffer, index = index, sep = delimiter)
-        s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = csv_buffer.getvalue(), ServerSideEncryption = ServerSideEncryption  )
+        s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = csv_buffer.getvalue(), **extra_kwargs )
         print('saved file {0} in bucket {1}'.format(csv_name, s3_subdirectory_var + csv_name))
         # CREATE AN EMPTY TABLE IN REDSHIFT
         if index == True:
