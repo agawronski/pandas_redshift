@@ -62,8 +62,7 @@ def pandas_to_redshift(data_frame,
     rrwords = open(os.path.join(os.path.dirname(__file__), \
     'redshift_reserve_words.txt'), 'r').readlines()
     rrwords = [r.strip().lower() for r in rrwords]
-    accepted_kwargs = ['ACL', 'Body', 'CacheControl ',  'ContentDisposition', 'ContentEncoding', 'ContentLanguage', 'ContentLength', 'ContentMD5', 'ContentType', 'Expires', 'GrantFullControl', 'GrantRead', 'GrantReadACP', 'GrantWriteACP', 'Metadata', 'ServerSideEncryption', 'StorageClass', 'WebsiteRedirectLocation', 'SSECustomerAlgorithm', 'SSECustomerKey', 'SSECustomerKeyMD5', 'SSEKMSKeyId', 'RequestPayer', 'Tagging' ] # Available parameters for 
-    service: https://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.Client.put_object
+    accepted_kwargs = ['ACL', 'Body', 'CacheControl ',  'ContentDisposition', 'ContentEncoding', 'ContentLanguage', 'ContentLength', 'ContentMD5', 'ContentType', 'Expires', 'GrantFullControl', 'GrantRead', 'GrantReadACP', 'GrantWriteACP', 'Metadata', 'ServerSideEncryption', 'StorageClass', 'WebsiteRedirectLocation', 'SSECustomerAlgorithm', 'SSECustomerKey', 'SSECustomerKeyMD5', 'SSEKMSKeyId', 'RequestPayer', 'Tagging' ] # Available parameters for service: https://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.Client.put_object
     extra_kwargs = {k: v for k, v in kwargs.items() if k in accepted_kwargs and v is not None}
     data_frame.columns = [x.lower() for x in data_frame.columns]
     not_valid = [r for r in data_frame.columns if r in rrwords]
