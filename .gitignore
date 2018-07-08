@@ -2,3 +2,7 @@ __pycache__/
 dist/*
 *.egg-info
 build/
+.vscode/
+Pipfile
+Pipfile.lock
+requirements.txt
