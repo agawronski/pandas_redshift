@@ -58,6 +58,10 @@ def pandas_to_redshift(data_frame,
                        timeformat = 'auto',
                        region = '',
                        append = False,
+                       diststyle = 'even',
+                       distkey = '',
+                       sort_interleaved = False,
+                       sortkey = '',
                       **kwargs):
     rrwords = open(os.path.join(os.path.dirname(__file__), \
     'redshift_reserve_words.txt'), 'r').readlines()
@@ -92,6 +96,19 @@ def pandas_to_redshift(data_frame,
         columns_and_data_type = ', '.join(['{0} {1}'.format(x, y) for x,y in zip(columns, column_data_types)])
         if append is False:
             create_table_query = 'create table {0} ({1})'.format(redshift_table_name, columns_and_data_type)
+            if len(distkey) == 0:
+                # Without a distkey, we can set a diststyle
+                if diststyle not in ['even', 'all']:
+                    raise ValueError("diststyle must be either 'even' or 'all'")
+                else:
+                    create_table_query += ' diststyle {0}'.format(diststyle)
+            else:
+                # otherwise, override diststyle with distkey
+                create_table_query += ' distkey({0})'.format(distkey)
+            if len(sortkey) > 0:
+                if sort_interleaved:
+                    create_table_query += ' interleaved'
+                create_table_query += ' sortkey({0})'.format(sortkey)
             print(create_table_query)
             print('CREATING A TABLE IN REDSHIFT')
             cursor.execute('drop table if exists {0}'.format(redshift_table_name))
