@@ -7,6 +7,13 @@ import boto3
 import sys
 import os
 
+S3_ACCEPTED_KWARGS = [
+    'ACL', 'Body', 'CacheControl ',  'ContentDisposition', 'ContentEncoding', 'ContentLanguage',
+    'ContentLength', 'ContentMD5', 'ContentType', 'Expires', 'GrantFullControl', 'GrantRead', 
+    'GrantReadACP', 'GrantWriteACP', 'Metadata', 'ServerSideEncryption', 'StorageClass', 
+    'WebsiteRedirectLocation', 'SSECustomerAlgorithm', 'SSECustomerKey', 'SSECustomerKeyMD5', 
+    'SSEKMSKeyId', 'RequestPayer', 'Tagging'
+] # Available parameters for service: https://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.Client.put_object
 
 def connect_to_redshift(dbname, host, user, port = 5439, **kwargs):
     # connect to redshift
@@ -70,7 +77,7 @@ def validate_column_names(data_frame):
     return data_frame
 
 
-def df_to_s3(data_frame, csv_name, index, save_local, delimiter):
+def df_to_s3(data_frame, csv_name, index, save_local, delimiter, **kwargs):
     """Write a dataframe to S3
 
     Arguments:
@@ -79,6 +86,7 @@ def df_to_s3(data_frame, csv_name, index, save_local, delimiter):
         save_local bool -- save a local copy
         delimiter str -- delimiter for csv file
     """
+    extra_kwargs = {k: v for k, v in kwargs.items() if k in S3_ACCEPTED_KWARGS and v is not None}
     # create local backup
     if save_local == True:
         data_frame.to_csv(csv_name, index=index, sep=delimiter)
@@ -87,7 +95,8 @@ def df_to_s3(data_frame, csv_name, index, save_local, delimiter):
     csv_buffer = StringIO()
     data_frame.to_csv(csv_buffer, index=index, sep=delimiter)
     s3.Bucket(s3_bucket_var).put_object(
-        Key=s3_subdirectory_var + csv_name, Body=csv_buffer.getvalue())
+        Key=s3_subdirectory_var + csv_name, Body=csv_buffer.getvalue(),
+        **extra_kwargs)
     print('saved file {0} in bucket {1}'.format(
         csv_name, s3_subdirectory_var + csv_name))
 
@@ -96,7 +105,11 @@ def create_redshift_table(data_frame,
                           redshift_table_name,
                           column_data_types=None,
                           index=False,
-                          append=False):
+                          append=False,
+                          diststyle = 'even',
+                          distkey = '',
+                          sort_interleaved = False,
+                          sortkey = ''):
     """Create an empty RedShift Table
 
     """
@@ -115,6 +128,19 @@ def create_redshift_table(data_frame,
     
     create_table_query = 'create table {0} ({1})'.format(
         redshift_table_name, columns_and_data_type)
+    if len(distkey) == 0:
+        # Without a distkey, we can set a diststyle
+        if diststyle not in ['even', 'all']:
+            raise ValueError("diststyle must be either 'even' or 'all'")
+        else:
+            create_table_query += ' diststyle {0}'.format(diststyle)
+    else:
+        # otherwise, override diststyle with distkey
+        create_table_query += ' distkey({0})'.format(distkey)
+    if len(sortkey) > 0:
+        if sort_interleaved:
+            create_table_query += ' interleaved'
+        create_table_query += ' sortkey({0})'.format(sortkey)
     print(create_table_query)
     print('CREATING A TABLE IN REDSHIFT')
     cursor.execute('drop table if exists {0}'.format(redshift_table_name))
@@ -167,21 +193,27 @@ def pandas_to_redshift(data_frame,
                        dateformat='auto',
                        timeformat='auto',
                        region='',
-                       append=False):
+                       append=False,
+                       diststyle='even',
+                       distkey='',
+                       sort_interleaved=False,
+                       sortkey='',
+                       **kwargs):
 
     # Validate column names.
     data_frame = validate_column_names(data_frame)
     # Send data to S3
     csv_name = redshift_table_name + '.csv'
-    df_to_s3(data_frame, csv_name, index, save_local, delimiter)
+    s3_kwargs = {k: v for k, v in kwargs.items() if k in S3_ACCEPTED_KWARGS and v is not None}
+    df_to_s3(data_frame, csv_name, index, save_local, delimiter, **s3_kwargs)
 
     # CREATE AN EMPTY TABLE IN REDSHIFT
     if append is False:
         create_redshift_table(data_frame, redshift_table_name,
-                              column_data_types, index, append)
+                              column_data_types, index, append,
+                              diststyle, distkey, sort_interleaved, sortkey)
     # CREATE THE COPY STATEMENT TO SEND FROM S3 TO THE TABLE IN REDSHIFT
-    s3_to_redshift(redshift_table_name, delimiter, quotechar,
-                   dateformat, timeformat, region)
+    s3_to_redshift(redshift_table_name, delimiter, quotechar, dateformat, timeformat, region)
 
 
 
