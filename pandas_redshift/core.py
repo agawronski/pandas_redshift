@@ -27,8 +27,8 @@ def connect_to_redshift(dbname, host, user, port = 5439, **kwargs):
     cursor = connect.cursor()
 
 
-def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory = None, **kwargs):
-    global s3, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2, aws_token
+def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory=None, aws_iam_role=None, **kwargs):
+    global s3, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2, aws_token, aws_role
     s3 = boto3.resource('s3',
                         aws_access_key_id = aws_access_key_id,
                         aws_secret_access_key = aws_secret_access_key,
@@ -40,6 +40,7 @@ def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory
         s3_subdirectory_var = subdirectory + '/'
     aws_1 = aws_access_key_id
     aws_2 = aws_secret_access_key
+    aws_role = aws_iam_role
     if kwargs.get('aws_session_token'):
         aws_token = kwargs.get('aws_session_token')
     else:
@@ -153,6 +154,19 @@ def s3_to_redshift(redshift_table_name, delimiter=',', quotechar='"',
 
     bucket_name = 's3://{0}/{1}.csv'.format(
                         s3_bucket_var, s3_subdirectory_var + redshift_table_name)
+
+    if aws_1 and aws_2:
+        authorization = """
+        access_key_id '{0}'
+        secret_access_key '{1}'
+        """.format(aws_1, aws_2)
+    elif aws_role:
+        authorization = """
+        iam_role '{0}'
+        """.format(aws_role)
+    else:
+        authorization = ""
+
     s3_to_sql = """
     copy {0}
     from '{1}'
@@ -161,10 +175,9 @@ def s3_to_redshift(redshift_table_name, delimiter=',', quotechar='"',
     csv quote as '{3}'
     dateformat '{4}'
     timeformat '{5}'
-    access_key_id '{6}'
-    secret_access_key '{7}'
+    {6}
     """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat,
-               timeformat, aws_1, aws_2)
+               timeformat, authorization)
     if region:
         s3_to_sql = s3_to_sql + "region '{0}'".format(region)
     if aws_token != '':
