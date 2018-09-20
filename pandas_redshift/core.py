@@ -150,7 +150,7 @@ def create_redshift_table(data_frame,
 
 
 def s3_to_redshift(redshift_table_name, delimiter=',', quotechar='"',
-                   dateformat='auto', timeformat='auto', region=''):
+                   dateformat='auto', timeformat='auto', region='', parameters=''):
 
     bucket_name = 's3://{0}/{1}.csv'.format(
                         s3_bucket_var, s3_subdirectory_var + redshift_table_name)
@@ -176,8 +176,9 @@ def s3_to_redshift(redshift_table_name, delimiter=',', quotechar='"',
     dateformat '{4}'
     timeformat '{5}'
     {6}
+    {7}
     """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat,
-               timeformat, authorization)
+               timeformat, authorization, parameters)
     if region:
         s3_to_sql = s3_to_sql + "region '{0}'".format(region)
     if aws_token != '':
@@ -211,6 +212,7 @@ def pandas_to_redshift(data_frame,
                        distkey='',
                        sort_interleaved=False,
                        sortkey='',
+                       parameters='',
                        **kwargs):
 
     # Validate column names.
@@ -226,7 +228,7 @@ def pandas_to_redshift(data_frame,
                               column_data_types, index, append,
                               diststyle, distkey, sort_interleaved, sortkey)
     # CREATE THE COPY STATEMENT TO SEND FROM S3 TO THE TABLE IN REDSHIFT
-    s3_to_redshift(redshift_table_name, delimiter, quotechar, dateformat, timeformat, region)
+    s3_to_redshift(redshift_table_name, delimiter, quotechar, dateformat, timeformat, region, parameters)
 
 
 
