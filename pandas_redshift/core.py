@@ -6,6 +6,7 @@ import psycopg2
 import boto3
 import sys
 import os
+import re
 
 S3_ACCEPTED_KWARGS = [
     'ACL', 'Body', 'CacheControl ',  'ContentDisposition', 'ContentEncoding', 'ContentLanguage',
@@ -16,7 +17,6 @@ S3_ACCEPTED_KWARGS = [
 ] # Available parameters for service: https://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.Client.put_object
 
 def connect_to_redshift(dbname, host, user, port = 5439, **kwargs):
-    # connect to redshift
     global connect, cursor
     connect = psycopg2.connect(dbname = dbname,
                                         host = host,
@@ -75,6 +75,12 @@ def validate_column_names(data_frame):
                 'DataFrame column name {0} is a reserve word in redshift'
                 .format(col))
 
+    # check for spaces in the column names
+    there_are_spaces = sum([re.search('\s', x) != None for x in data_frame.columns]) > 0
+    # delimit them if there are
+    if there_are_spaces:
+        col_names_dict = {x:'"{0}"'.format(x) for x in data_frame.columns}
+        data_frame.rename(columns = col_names_dict, inplace = True)
     return data_frame
 
 
