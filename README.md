@@ -1,7 +1,3 @@
-## Note 2018-09-20:
-Release 1.1.3. has not been fully tested. Core functionality has been tested, however much of the additional functionality has not. Please open issues regarding anything you encounter as soon as possible so that I can ensure this release is stable.
-
-
 ## pandas_redshift
 
 This package is designed to make it easier to get data from redshift into a pandas DataFrame and vice versa.
