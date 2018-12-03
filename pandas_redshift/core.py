@@ -101,9 +101,10 @@ def df_to_s3(data_frame, csv_name, index, save_local, delimiter, **kwargs):
     #
     csv_buffer = StringIO()
     data_frame.to_csv(csv_buffer, index=index, sep=delimiter)
-    s3.Bucket(s3_bucket_var).put_object(
-        Key=s3_subdirectory_var + csv_name, Body=csv_buffer.getvalue(),
-        **extra_kwargs)
+    s3.meta.client.upload_file(s3_subdirectory_var + csv_name, csv_buffer.getvalue(), **extra_kwargs)
+    # s3.Bucket(s3_bucket_var).put_object(
+    #     Key=s3_subdirectory_var + csv_name, Body=csv_buffer.getvalue(),
+    #     **extra_kwargs)
     print('saved file {0} in bucket {1}'.format(
         csv_name, s3_subdirectory_var + csv_name))
 
