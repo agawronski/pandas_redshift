@@ -7,6 +7,8 @@ import boto3
 import sys
 import os
 import re
+import uuid
+
 
 S3_ACCEPTED_KWARGS = [
     'ACL', 'Body', 'CacheControl ',  'ContentDisposition', 'ContentEncoding', 'ContentLanguage',
@@ -180,11 +182,11 @@ def create_redshift_table(data_frame,
     connect.commit()
 
 
-def s3_to_redshift(redshift_table_name, delimiter=',', quotechar='"',
+def s3_to_redshift(redshift_table_name, csv_name, delimiter=',', quotechar='"',
                    dateformat='auto', timeformat='auto', region='', parameters=''):
 
-    bucket_name = 's3://{0}/{1}.csv'.format(
-        s3_bucket_var, s3_subdirectory_var + redshift_table_name)
+    bucket_name = 's3://{0}/{1}'.format(
+        s3_bucket_var, s3_subdirectory_var + csv_name)
 
     if aws_1 and aws_2:
         authorization = """
@@ -249,9 +251,9 @@ def pandas_to_redshift(data_frame,
     # Validate column names.
     data_frame = validate_column_names(data_frame)
     # Send data to S3
-    csv_name = redshift_table_name + '.csv'
-    s3_kwargs = {k: v for k, v in kwargs.items(
-    ) if k in S3_ACCEPTED_KWARGS and v is not None}
+    csv_name = '{}-{}.csv'.format(redshift_table_name, uuid.uuid4())
+    s3_kwargs = {k: v for k, v in kwargs.items()
+        if k in S3_ACCEPTED_KWARGS and v is not None}
     df_to_s3(data_frame, csv_name, index, save_local, delimiter, **s3_kwargs)
 
     # CREATE AN EMPTY TABLE IN REDSHIFT
@@ -259,8 +261,9 @@ def pandas_to_redshift(data_frame,
         create_redshift_table(data_frame, redshift_table_name,
                               column_data_types, index, append,
                               diststyle, distkey, sort_interleaved, sortkey)
+
     # CREATE THE COPY STATEMENT TO SEND FROM S3 TO THE TABLE IN REDSHIFT
-    s3_to_redshift(redshift_table_name, delimiter, quotechar,
+    s3_to_redshift(redshift_table_name, csv_name, delimiter, quotechar,
                    dateformat, timeformat, region, parameters)
 
 
