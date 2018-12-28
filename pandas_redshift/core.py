@@ -108,6 +108,28 @@ def df_to_s3(data_frame, csv_name, index, save_local, delimiter, **kwargs):
         csv_name, s3_subdirectory_var + csv_name))
 
 
+def pd_dtype_to_redshift_dtype(dtype):
+    if dtype.startswith('int'):
+        return 'INTEGER'
+    elif dtype.startswith('float'):
+        return 'REAL'
+    elif dtype.startswith('datetime'):
+        return 'TIMESTAMP'
+    elif dtype=='bool':
+        return 'BOOLEAN'
+    else:
+        return 'VARCHAR(256)'
+
+
+def get_column_data_types(data_frame, index=False):
+    column_data_types = [pd_dtype_to_redshift_dtype(dtype.name)
+                         for dtype in data_frame.dtypes.values]
+    if index:
+        column_data_types.insert(
+            0, pd_dtype_to_redshift_dtype(data_frame.index.dtype.name))
+    return column_data_types
+
+
 def create_redshift_table(data_frame,
                           redshift_table_name,
                           column_data_types=None,
@@ -129,7 +151,7 @@ def create_redshift_table(data_frame,
     else:
         columns = list(data_frame.columns)
     if column_data_types is None:
-        column_data_types = ['varchar(256)'] * len(columns)
+        column_data_types = get_column_data_types(data_frame, index)
     columns_and_data_type = ', '.join(
         ['{0} {1}'.format(x, y) for x, y in zip(columns, column_data_types)])
     
