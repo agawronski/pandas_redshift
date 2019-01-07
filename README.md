@@ -1,3 +1,9 @@
+## Version 2.0.0 note:
+
+Version 2.0.0 introduces a change which may not be compatible with users current workflows/piplines.
+Previous to 2.0.0 the default when writing a DataFrame to redshift was to write all data types as VARCHAR.
+In the current version the redshift data types will be inferred from the DataFrame dtypes.
+
 ## pandas_redshift
 
 This package is designed to make it easier to get data from redshift into a pandas DataFrame and vice versa.
