@@ -78,7 +78,7 @@ As of v1.1.2 you can specify the region (necessary if the S3 bucket is in a diff
 pr.pandas_to_redshift(data_frame,
                         redshift_table_name,
                         # Defaults:
-                        column_data_types = None, # A list of column data types. If not supplied all columns will default to varchar(256)
+                        column_data_types = None, # A list of column data types. As of 2.0.0 If not supplied the data types will be inferred from the DataFrame dtypes
                         index = False,
                         save_local = False, # If set to True a csv from the data frame will save in the current directory
                         delimiter = ',',
