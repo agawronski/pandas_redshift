@@ -143,7 +143,8 @@ def create_redshift_table(data_frame,
                           diststyle='even',
                           distkey='',
                           sort_interleaved=False,
-                          sortkey=''):
+                          sortkey='',
+                          simple_output=False):
     """Create an empty RedShift Table
 
     """
@@ -175,15 +176,16 @@ def create_redshift_table(data_frame,
         if sort_interleaved:
             create_table_query += ' interleaved'
         create_table_query += ' sortkey({0})'.format(sortkey)
-    print(create_table_query)
-    print('CREATING A TABLE IN REDSHIFT')
+    if not simple_output:
+        print(create_table_query)
+    print('CREATING A TABLE IN REDSHIFT: {0}'.format(redshift_table_name))
     cursor.execute('drop table if exists {0}'.format(redshift_table_name))
     cursor.execute(create_table_query)
     connect.commit()
 
 
 def s3_to_redshift(redshift_table_name, csv_name, delimiter=',', quotechar='"',
-                   dateformat='auto', timeformat='auto', region='', parameters=''):
+                   dateformat='auto', timeformat='auto', region='', parameters='', simple_output=False):
 
     bucket_name = 's3://{0}/{1}'.format(
         s3_bucket_var, s3_subdirectory_var + csv_name)
@@ -217,9 +219,10 @@ def s3_to_redshift(redshift_table_name, csv_name, delimiter=',', quotechar='"',
     if aws_token != '':
         s3_to_sql = s3_to_sql + "\n\tsession_token '{0}'".format(aws_token)
     s3_to_sql = s3_to_sql + ';'
-    print(s3_to_sql)
+    if not simple_output:
+        print(s3_to_sql)
     # send the file
-    print('FILLING THE TABLE IN REDSHIFT')
+    print('FILLING {0} TABLE IN REDSHIFT'.format(redshift_table_name))
     try:
         cursor.execute(s3_to_sql)
         connect.commit()
@@ -246,6 +249,7 @@ def pandas_to_redshift(data_frame,
                        sort_interleaved=False,
                        sortkey='',
                        parameters='',
+                       simple_output=False,
                        **kwargs):
 
     # Validate column names.
@@ -260,11 +264,11 @@ def pandas_to_redshift(data_frame,
     if not append:
         create_redshift_table(data_frame, redshift_table_name,
                               column_data_types, index, append,
-                              diststyle, distkey, sort_interleaved, sortkey)
+                              diststyle, distkey, sort_interleaved, sortkey, simple_output)
 
     # CREATE THE COPY STATEMENT TO SEND FROM S3 TO THE TABLE IN REDSHIFT
     s3_to_redshift(redshift_table_name, csv_name, delimiter, quotechar,
-                   dateformat, timeformat, region, parameters)
+                   dateformat, timeformat, region, parameters, simple_output)
 
 
 def exec_commit(sql_query):
