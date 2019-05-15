@@ -116,7 +116,7 @@ def df_to_s3(data_frame, csv_name, index, save_local, delimiter, **kwargs):
 def pd_dtype_to_redshift_dtype(dtype):
     if dtype.startswith('int64'):
         return 'BIGINT'
-    if dtype.startswith('int'):
+    elif dtype.startswith('int'):
         return 'INTEGER'
     elif dtype.startswith('float'):
         return 'REAL'
