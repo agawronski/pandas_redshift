@@ -88,7 +88,7 @@ def validate_column_names(data_frame):
     return data_frame
 
 
-def df_to_s3(data_frame, csv_name, index, save_local, delimiter, **kwargs):
+def df_to_s3(data_frame, csv_name, index, save_local, delimiter, verbose=True, **kwargs):
     """Write a dataframe to S3
 
     Arguments:
@@ -145,7 +145,8 @@ def create_redshift_table(data_frame,
                           diststyle='even',
                           distkey='',
                           sort_interleaved=False,
-                          sortkey=''):
+                          sortkey='',
+                          verbose=True):
     """Create an empty RedShift Table
 
     """
@@ -185,7 +186,7 @@ def create_redshift_table(data_frame,
 
 
 def s3_to_redshift(redshift_table_name, csv_name, delimiter=',', quotechar='"',
-                   dateformat='auto', timeformat='auto', region='', parameters=''):
+                   dateformat='auto', timeformat='auto', region='', parameters='', verbose=True):
 
     bucket_name = 's3://{0}/{1}'.format(
         s3_bucket_var, s3_subdirectory_var + csv_name)
@@ -248,6 +249,7 @@ def pandas_to_redshift(data_frame,
                        sort_interleaved=False,
                        sortkey='',
                        parameters='',
+                       verbose=True,
                        **kwargs):
 
     # Validate column names.
