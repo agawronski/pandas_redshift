@@ -262,17 +262,17 @@ def pandas_to_redshift(data_frame,
     csv_name = '{}-{}.csv'.format(redshift_table_name, uuid.uuid4())
     s3_kwargs = {k: v for k, v in kwargs.items()
         if k in S3_ACCEPTED_KWARGS and v is not None}
-    df_to_s3(data_frame, csv_name, index, save_local, delimiter, **s3_kwargs)
+    df_to_s3(data_frame, csv_name, index, save_local, delimiter, verbose=verbose, **s3_kwargs)
 
     # CREATE AN EMPTY TABLE IN REDSHIFT
     if not append:
         create_redshift_table(data_frame, redshift_table_name,
                               column_data_types, index, append,
-                              diststyle, distkey, sort_interleaved, sortkey)
+                              diststyle, distkey, sort_interleaved, sortkey, verbose=verbose)
 
     # CREATE THE COPY STATEMENT TO SEND FROM S3 TO THE TABLE IN REDSHIFT
     s3_to_redshift(redshift_table_name, csv_name, delimiter, quotechar,
-                   dateformat, timeformat, region, parameters)
+                   dateformat, timeformat, region, parameters, verbose=verbose)
 
 
 def exec_commit(sql_query):
