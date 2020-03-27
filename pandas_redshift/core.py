@@ -50,9 +50,9 @@ def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory
         aws_token = ''
 
 
-def redshift_to_pandas(sql_query):
+def redshift_to_pandas(sql_query, query_params=None):
     # pass a sql query and return a pandas dataframe
-    cursor.execute(sql_query)
+    cursor.execute(sql_query, query_params)
     columns_list = [desc[0] for desc in cursor.description]
     data = pd.DataFrame(cursor.fetchall(), columns=columns_list)
     return data
