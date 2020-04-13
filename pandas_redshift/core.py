@@ -237,11 +237,17 @@ def s3_to_redshift(redshift_table_name, csv_name, delimiter=',', quotechar='"',
         raise
 
 
+def delete_csv(csv_name):
+    print("Delete s3 bucket's csv file: {0}/{1}".format(s3_subdirectory_var, csv_name))
+    s3.Bucket(s3_bucket_var).objects.filter(Prefix=s3_subdirectory_var+csv_name)
+
+
 def pandas_to_redshift(data_frame,
                        redshift_table_name,
                        column_data_types=None,
                        index=False,
                        save_local=False,
+                       delete_s3csv=True,
                        delimiter=',',
                        quotechar='"',
                        dateformat='auto',
@@ -264,15 +270,19 @@ def pandas_to_redshift(data_frame,
         if k in S3_ACCEPTED_KWARGS and v is not None}
     df_to_s3(data_frame, csv_name, index, save_local, delimiter, verbose=verbose, **s3_kwargs)
 
-    # CREATE AN EMPTY TABLE IN REDSHIFT
-    if not append:
-        create_redshift_table(data_frame, redshift_table_name,
-                              column_data_types, index, append,
-                              diststyle, distkey, sort_interleaved, sortkey, verbose=verbose)
+    try:
+        # CREATE AN EMPTY TABLE IN REDSHIFT
+        if not append:
+            create_redshift_table(data_frame, redshift_table_name,
+                                  column_data_types, index, append,
+                                  diststyle, distkey, sort_interleaved, sortkey, verbose=verbose)
 
-    # CREATE THE COPY STATEMENT TO SEND FROM S3 TO THE TABLE IN REDSHIFT
-    s3_to_redshift(redshift_table_name, csv_name, delimiter, quotechar,
+        # CREATE THE COPY STATEMENT TO SEND FROM S3 TO THE TABLE IN REDSHIFT
+        s3_to_redshift(redshift_table_name, csv_name, delimiter, quotechar,
                    dateformat, timeformat, region, parameters, verbose=verbose)
+    finally:
+        if True == delete_s3csv:
+            delete_csv(csv_name)
 
 
 def exec_commit(sql_query):
