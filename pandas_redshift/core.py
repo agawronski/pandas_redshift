@@ -24,10 +24,8 @@ logging_config = {
     'logger_level': logging.INFO,
     'mask_secrets': True
 }
-log_format = 'Pandas Redshift | %(asctime)s | %(name)s | %(levelname)s | %(message)s'
-logging.basicConfig(level=logging_config['logger_level'], format=log_format)
 logger = logging.getLogger(__name__)
-
+logger.addHandler(logging.NullHandler())
 
 def set_log_level(level, mask_secrets=True):
     log_level_map = {
