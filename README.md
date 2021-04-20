@@ -31,7 +31,7 @@ Query redshift and return a pandas DataFrame.
 ```python
 data = pr.redshift_to_pandas('select * from gawronski.nba_shots_log')
 
-data.ix[0:5,0:5]
+data.iloc[0:5,0:5]
 
 GAME_ID1                   MATCHUP LOCATION  W  FINAL_MARGIN
 0  21400899  MAR 4, 2015 - CHA @ BKN        A  W            24
@@ -63,6 +63,9 @@ pr.pandas_to_redshift(data_frame = data,
                         redshift_table_name = 'gawronski.nba_shots_log')
 
 ```
+2020-04-19
+v2.0.5 logging is up to you to specifiy.
+
 
 Other options:
 
