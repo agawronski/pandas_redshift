@@ -64,7 +64,8 @@ pr.pandas_to_redshift(data_frame = data,
 
 ```
 2020-04-19
-v2.0.5 logging is up to you to specifiy.
+
+Release 2.0.5 logging is up to you to specifiy.
 
 
 Other options:
