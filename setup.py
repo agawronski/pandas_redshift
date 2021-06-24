@@ -9,8 +9,9 @@ setup(
     author_email='aidangawronski@gmail.com',
     # url = 'https://github.com/agawronski/pandas_redshift',
     python_requires='>=3',
-    install_requires=['psycopg2-binary',
-                      'pandas',
-                      'boto3'],
+    install_requires=["psycopg2-binary",
+                      "pandas",
+                      "'dask[dataframe]'"
+                      "boto3"],
     include_package_data=True
 )

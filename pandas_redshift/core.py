@@ -9,6 +9,8 @@ import os
 import re
 import uuid
 import logging
+import dask as dsk
+import dask.dataframe as dd
 
 S3_ACCEPTED_KWARGS = [
     'ACL', 'Body', 'CacheControl ',  'ContentDisposition', 'ContentEncoding', 'ContentLanguage',
@@ -126,22 +128,29 @@ def df_to_s3(data_frame, csv_name, index, save_local, delimiter, verbose=True, *
         save_local bool -- save a local copy
         delimiter str -- delimiter for csv file
     """
-    extra_kwargs = {k: v for k, v in kwargs.items(
-    ) if k in S3_ACCEPTED_KWARGS and v is not None}
-    # create local backup
-    if save_local:
-        data_frame.to_csv(csv_name, index=index, sep=delimiter)
+    if type(data_frame) == pd.core.frame.DataFrame:
+        extra_kwargs = {k: v for k, v in kwargs.items(
+
+        ) if k in S3_ACCEPTED_KWARGS and v is not None}
+        # create local backup
+        if save_local:
+            data_frame.to_csv(csv_name, index=index, sep=delimiter)
+            if verbose:
+                logger.info('saved file {0} in {1}'.format(csv_name, os.getcwd()))
+        #
+        csv_buffer = StringIO()
+        data_frame.to_csv(csv_buffer, index=index, sep=delimiter)
+        s3.Bucket(s3_bucket_var).put_object(
+            Key=s3_subdirectory_var + csv_name, Body=csv_buffer.getvalue(),
+            **extra_kwargs)
         if verbose:
-            logger.info('saved file {0} in {1}'.format(csv_name, os.getcwd()))
-    #
-    csv_buffer = StringIO()
-    data_frame.to_csv(csv_buffer, index=index, sep=delimiter)
-    s3.Bucket(s3_bucket_var).put_object(
-        Key=s3_subdirectory_var + csv_name, Body=csv_buffer.getvalue(),
-        **extra_kwargs)
-    if verbose:
-        logger.info('saved file {0} in bucket {1}'.format(
-            csv_name, s3_subdirectory_var + csv_name))
+            logger.info('saved file {0} in bucket {1}'.format(
+                csv_name, s3_subdirectory_var + csv_name))
+
+    elif type(data_frame) == dsk.dataframe.core.DataFrame:
+        data_frame.to_csv(f"s3://{s3_bucket_var}/{s3_subdirectory_var + csv_name}", 
+                            storage_options = {'key': aws_1, 'secret': aws_2}, 
+                            single_file = True, index=False)
 
 
 def pd_dtype_to_redshift_dtype(dtype):
