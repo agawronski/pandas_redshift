@@ -156,7 +156,7 @@ def pd_dtype_to_redshift_dtype(dtype):
     elif dtype == 'bool':
         return 'BOOLEAN'
     else:
-        return 'VARCHAR(256)'
+        return 'VARCHAR(MAX)'
 
 
 def get_column_data_types(data_frame, index=False):
