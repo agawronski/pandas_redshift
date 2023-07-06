@@ -4,6 +4,7 @@ import pandas as pd
 import traceback
 import psycopg2
 import boto3
+import math
 import sys
 import os
 import re
@@ -123,7 +124,7 @@ def validate_column_names(data_frame):
     return data_frame
 
 
-def upload_dataframe_multipart(dataframe, bucket_name, key, part_size_mb=5):
+def upload_dataframe_multipart(dataframe, bucket_name, key, part_size_mb=500):
     """Upload a large dataframe to S3 using multipart uploads.
     
     Arguments:
@@ -143,12 +144,22 @@ def upload_dataframe_multipart(dataframe, bucket_name, key, part_size_mb=5):
     # Calculate part size in bytes
     part_size = part_size_mb * 1024 * 1024
     
-    # Upload each part
-    part_number = 1
+    # Get the buffer size
+    buffer_size = csv_buffer.tell()
+    print('Buffer size: {}'.format(buffer_size))
+    
+    # Calculate the number of parts
+    num_parts = math.ceil(buffer_size / part_size)
+    print('Number of parts: {}'.format(num_parts))
+    
+    # Reset the buffer position to the beginning
+    csv_buffer.seek(0)
+
     parts = []
     
-    while csv_buffer.tell() > 0:
+    for part_number in range(1, num_parts + 1):
         # Read part data
+        print('Uploading part: {}'.format(part_number))
         part_data = csv_buffer.read(part_size)
         
         # Upload part
@@ -199,7 +210,7 @@ def df_to_s3(data_frame, csv_name, index, save_local, delimiter, verbose=True, *
     if dataframe_size_bytes > 5 * 1024 * 1024 * 1024:
         # Call multipart upload function
         print('Uploading using multipart')
-        upload_dataframe_multipart(data_frame, s3_bucket_var, s3_subdirectory_var + csv_name, part_size_mb=5)
+        upload_dataframe_multipart(data_frame, s3_bucket_var, s3_subdirectory_var + csv_name, part_size_mb=500)
     # Upload using single part if file is smaller than 5GB
     else:
         csv_buffer = StringIO()
