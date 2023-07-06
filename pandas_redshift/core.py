@@ -157,25 +157,22 @@ def upload_dataframe_multipart(dataframe, bucket_name, key, part_size_mb=500):
 
     parts = []
     
-    for part_number in range(1, num_parts + 1):
+    for part_number in range(num_parts):
         # Read part data
-        print('Uploading part: {}'.format(part_number))
+        print(f'Uploading part: {part_number}')
         part_data = csv_buffer.read(part_size)
         
         # Upload part
         response = s3_client.upload_part(
             Bucket=bucket_name,
             Key=key,
-            PartNumber=part_number,
+            PartNumber=part_number + 1,
             UploadId=upload_id,
             Body=part_data.encode()
         )
         
         # Store ETag for later completion
         parts.append({'PartNumber': part_number, 'ETag': response['ETag']})
-        
-        # Increment part number
-        part_number += 1
     
     # Complete multipart upload
     response = s3_client.complete_multipart_upload(
