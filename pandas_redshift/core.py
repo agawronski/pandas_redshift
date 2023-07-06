@@ -4,6 +4,7 @@ import pandas as pd
 import traceback
 import psycopg2
 import boto3
+import math
 import sys
 import os
 import re
@@ -60,11 +61,17 @@ def connect_to_redshift(dbname, host, user, port=5439, **kwargs):
 
 
 def connect_to_s3(aws_access_key_id, aws_secret_access_key, bucket, subdirectory=None, aws_iam_role=None, **kwargs):
-    global s3, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2, aws_token, aws_role
+    global s3, s3_client, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2, aws_token, aws_role
     s3 = boto3.resource('s3',
                         aws_access_key_id=aws_access_key_id,
                         aws_secret_access_key=aws_secret_access_key,
                         **kwargs)
+    
+    s3_client = boto3.client('s3',
+                                aws_access_key_id=aws_access_key_id,
+                                aws_secret_access_key=aws_secret_access_key,
+                                **kwargs)
+    
     s3_bucket_var = bucket
     if subdirectory is None:
         s3_subdirectory_var = ''
@@ -117,6 +124,67 @@ def validate_column_names(data_frame):
     return data_frame
 
 
+def upload_dataframe_multipart(dataframe, bucket_name, key, part_size_mb=500):
+    """Upload a large dataframe to S3 using multipart uploads.
+    
+    Arguments:
+        dataframe pd.DataFram} -- Dataframe to upload
+        bucket_name str -- Name of S3 bucket
+        key str -- S3 key to upload to
+        part_size_mb int -- Size of each part in MB
+    """
+    # Initiate multipart upload
+    response = s3_client.create_multipart_upload(Bucket=bucket_name, Key=key)
+    upload_id = response['UploadId']
+    
+    # Convert DataFrame to CSV in memory
+    csv_buffer = StringIO()
+    dataframe.to_csv(csv_buffer, index=False)
+    
+    # Calculate part size in bytes
+    part_size = part_size_mb * 1024 * 1024
+    
+    # Get the buffer size
+    buffer_size = csv_buffer.tell()
+    print('Buffer size: {}'.format(buffer_size))
+    
+    # Calculate the number of parts
+    num_parts = math.ceil(buffer_size / part_size)
+    print('Number of parts: {}'.format(num_parts))
+    
+    # Reset the buffer position to the beginning
+    csv_buffer.seek(0)
+
+    parts = []
+    
+    for part_number in range(num_parts):
+        # Read part data
+        print(f'Uploading part: {part_number}')
+        part_data = csv_buffer.read(part_size)
+        
+        # Upload part
+        response = s3_client.upload_part(
+            Bucket=bucket_name,
+            Key=key,
+            PartNumber=part_number + 1,
+            UploadId=upload_id,
+            Body=part_data.encode()
+        )
+        
+        # Store ETag for later completion
+        parts.append({'PartNumber': part_number, 'ETag': response['ETag']})
+    
+    # Complete multipart upload
+    response = s3_client.complete_multipart_upload(
+        Bucket=bucket_name,
+        Key=key,
+        UploadId=upload_id,
+        MultipartUpload={'Parts': parts}
+    )
+    
+    print('DataFrame uploaded successfully.')
+
+
 def df_to_s3(data_frame, csv_name, index, save_local, delimiter, verbose=True, **kwargs):
     """Write a dataframe to S3
 
@@ -133,12 +201,20 @@ def df_to_s3(data_frame, csv_name, index, save_local, delimiter, verbose=True, *
         data_frame.to_csv(csv_name, index=index, sep=delimiter)
         if verbose:
             logger.info('saved file {0} in {1}'.format(csv_name, os.getcwd()))
-    #
-    csv_buffer = StringIO()
-    data_frame.to_csv(csv_buffer, index=index, sep=delimiter)
-    s3.Bucket(s3_bucket_var).put_object(
-        Key=s3_subdirectory_var + csv_name, Body=csv_buffer.getvalue(),
-        **extra_kwargs)
+    # Check if the dataframe size is greater than 5GB
+    dataframe_size_bytes = data_frame.memory_usage(deep=True).sum()
+    # Upload using multipart if file is larger than 5GB
+    if dataframe_size_bytes > 5 * 1024 * 1024 * 1024:
+        # Call multipart upload function
+        print('Uploading using multipart')
+        upload_dataframe_multipart(data_frame, s3_bucket_var, s3_subdirectory_var + csv_name, part_size_mb=500)
+    # Upload using single part if file is smaller than 5GB
+    else:
+        csv_buffer = StringIO()
+        data_frame.to_csv(csv_buffer, index=index, sep=delimiter)
+        s3.Bucket(s3_bucket_var).put_object(
+            Key=s3_subdirectory_var + csv_name, Body=csv_buffer.getvalue(),
+            **extra_kwargs)
     if verbose:
         logger.info('saved file {0} in bucket {1}'.format(
             csv_name, s3_subdirectory_var + csv_name))
@@ -310,7 +386,7 @@ def exec_commit(sql_query):
 
 
 def close_up_shop():
-    global connect, cursor, s3, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2, aws_token
+    global connect, cursor, s3, s3_client, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2, aws_token
     cursor.close()
     connect.commit()
     connect.close()
@@ -319,7 +395,7 @@ def close_up_shop():
     except:
         pass
     try:
-        del s3, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2, aws_token
+        del s3, s3_client, s3_bucket_var, s3_subdirectory_var, aws_1, aws_2, aws_token
     except:
         pass
 
